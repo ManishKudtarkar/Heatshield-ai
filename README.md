@@ -82,12 +82,12 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 - Explicit assessment limitations.
 - Occupational safety considerations.
 
-### 📊 Dashboard (In Development)
+### 📊 Dashboard
 - Climate intelligence visualization.
 - Worker exposure assessment.
 - AI-generated safety recommendations.
-- Supervisor monitoring interface.
-- Multilingual accessibility.
+- Responsive worker assessment form.
+- Structured deterministic assessment details.
 
 ---
 
@@ -196,7 +196,12 @@ heatshield-ai/
 │
 ├── frontend/
 │   ├── public/
-│   └── src/
+│   ├── src/
+│   │   └── app/
+│   │       ├── page.tsx
+│   │       ├── globals.css
+│   │       └── layout.tsx
+│   └── package.json
 │
 ├── demo/
 │
@@ -229,7 +234,7 @@ Make sure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/heatshield-ai.git
+git clone https://github.com/ManishKudtarkar/Heatshield-ai.git
 
 cd heatshield-ai
 ```
@@ -343,6 +348,29 @@ The backend will be available at:
 | `GET /health` | Health check |
 | `POST /api/v1/assess` | Execute complete assessment |
 | `GET /docs` | Interactive Swagger documentation |
+
+### 8. Start the Frontend Dashboard
+
+Open a second terminal from the repository root:
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+The dashboard will be available at [http://localhost:3000](http://localhost:3000).
+It sends assessments to `http://127.0.0.1:8000` by default. To use a different
+backend URL, create `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
+```
+
+The backend allows the local Next.js development origins
+(`localhost:3000` and `127.0.0.1:3000`). Update the CORS configuration in
+`backend/app/api.py` before deploying the frontend and backend on different
+origins.
 
 ---
 
@@ -464,7 +492,8 @@ Suspected heatstroke symptoms, including confusion, seizures, collapse or loss o
 - [x] FastAPI backend.
 - [x] Health check and API endpoints.
 - [x] Successful end-to-end API assessment.
-- [ ] Complete frontend dashboard.
+- [x] Responsive frontend assessment dashboard.
+- [x] Frontend-to-backend assessment integration.
 - [ ] Multilingual worker interface.
 - [ ] Validated occupational safety knowledge base.
 - [ ] Cooling resource discovery.

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 import logging
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 
 from app.agents.orchestrator import run_heatshield
@@ -31,6 +32,14 @@ app = FastAPI(
         "heat-exposure screening platform."
     ),
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
