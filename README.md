@@ -166,6 +166,10 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 | Climate Intelligence Agent | Interprets environmental weather observations and hourly forecasts. |
 | Worker Exposure Agent | Analyzes validated worker profiles and exposure factors. |
 | Deterministic Assessment Engine | Evaluates structured weather and worker information using Python logic. |
+| Proactive Safety Alerts Engine | Generates localized (English, Hindi, Gujarati) precautionary alerts with trigger evidence. |
+| Validated Knowledge Base | Retrieves curated occupational heat-safety guidance with explicit provenance to ground the advisory agents. |
+| Cooling Resource Discovery Tool | Finds mapped shaded rest points, drinking-water stations and public shelters near a worksite via OpenStreetMap. |
+| Supervisor Record Store | Retains screening summaries of recent assessments for the supervisor monitoring dashboard. |
 | Safety Advisory Agent | Generates contextual preventive guidance from assessment results. |
 | Orchestrator | Coordinates execution and checks consistency between assessment components. |
 
@@ -206,14 +210,18 @@ heatshield-ai/
 │   │   │   └── orchestrator.py
 │   │   │
 │   │   ├── engine/
-│   │   │   └── heat_assessment.py
+│   │   │   ├── heat_assessment.py
+│   │   │   ├── knowledge_base.py
+│   │   │   ├── safety_alerts.py
+│   │   │   └── supervisor_store.py
 │   │   │
 │   │   ├── schemas/
 │   │   │   └── worker.py
 │   │   │
 │   │   ├── tools/
 │   │   │   ├── weather_tool.py
-│   │   │   └── exposure_tool.py
+│   │   │   ├── exposure_tool.py
+│   │   │   └── cooling_resources.py
 │   │   │
 │   │   ├── api.py
 │   │   └── first_agent.py
@@ -229,18 +237,12 @@ heatshield-ai/
 │   │       └── layout.tsx
 │   └── package.json
 │
-├── demo/
-│
-├── docs/
-│
-├── infrastructure/
-│
 ├── .gitignore
 ├── LICENSE
 └── README.md
 ```
 
-*The frontend and infrastructure directories are being developed incrementally.*
+*The infrastructure directory for the pending AWS production deployment will be added incrementally.*
 
 ---
 
@@ -354,6 +356,13 @@ Deterministic Assessment:
 python3 -m app.test_exposure_tool
 ```
 
+Offline engine tests (no AWS or network required):
+
+```bash
+python3 -m app.test_heat_assessment
+python3 -m app.test_safety_alerts
+```
+
 Run the complete multi-agent pipeline:
 
 ```bash
@@ -418,6 +427,7 @@ POST /api/v1/assess
 ```json
 {
   "location": "Vadodara",
+  "language": "en",
   "worker": {
     "occupation": "Construction worker",
     "workload": "heavy",
@@ -438,6 +448,8 @@ POST /api/v1/assess
 }
 ```
 
+Set `language` to `"hi"` or `"gu"` to receive localized safety alerts in Hindi or Gujarati. An optional `response_language` field requests localized narrative sections as well.
+
 **Example Response Structure**
 
 ```json
@@ -451,12 +463,45 @@ POST /api/v1/assess
     "worker_exposure_analysis": "...",
     "validated_exposure_data": {},
     "deterministic_assessment": {},
+    "safety_alerts": {},
+    "knowledge_base": {},
+    "cooling_resources": {},
     "safety_advisory": "..."
   }
 }
 ```
 
-The actual response includes structured weather observations, worker exposure information, assessment limitations and safety recommendations.
+The actual response includes structured weather observations, worker exposure information, localized proactive safety alerts, knowledge-base guidance with provenance, assessment limitations and safety recommendations.
+
+### Supported Languages
+
+**Endpoint**
+
+```http
+GET /api/v1/languages
+```
+
+Returns the interface languages available for worker assessments (English, Hindi and Gujarati) along with the default language.
+
+### Cooling Resource Discovery
+
+**Endpoint**
+
+```http
+GET /api/v1/cooling-resources?location=Vadodara
+```
+
+Discovers mapped public cooling resources — shaded rest points, drinking-water stations and public shelters — near a city or worksite using OpenStreetMap data. Responses include resource provenance and explicit limitations because remote availability cannot be physically verified.
+
+### Supervisor Monitoring Dashboard
+
+**Endpoint**
+
+```http
+GET /api/v1/supervisor/dashboard
+```
+
+Returns an aggregated supervisory view of recent assessments: team-wide precaution-level counts, attention items (assessments with critical precautions or missing information), location coverage and coverage gaps such as water access, shade availability and acclimatization. Screening summaries only — no personal medical records. Every completed `POST /api/v1/assess` is recorded automatically in the demonstration store.
 
 ---
 
@@ -502,6 +547,7 @@ Suspected heatstroke symptoms, including confusion, seizures, collapse or loss o
 - [NIOSH — Criteria for a Recommended Standard: Occupational Exposure to Heat and Hot Environments](https://www.cdc.gov/niosh/docs/2016-106/)
 - [India Meteorological Department](https://mausam.imd.gov.in/)
 - [Open-Meteo Weather API](https://open-meteo.com/en/docs)
+- [OpenStreetMap / Overpass API](https://overpass-api.de/) — cooling resource data
 - [Strands Agents Documentation](https://strandsagents.com/)
 - [Amazon Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
 
