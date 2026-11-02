@@ -69,6 +69,12 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 - Continuous exposure duration.
 - Recovery-break information.
 
+### 🌐 Multilingual Worker Interface
+- English, Hindi and Gujarati user interface.
+- In-app language switcher shared across every page.
+- Localized safety guidance, enums and form labels.
+- Assessment requests carry the worker's language to the backend.
+
 ### 🤖 Multi-Agent AI System
 - Climate Intelligence Agent.
 - Worker Exposure Intelligence Agent.
@@ -90,6 +96,22 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 - AI-generated safety recommendations.
 - Responsive worker assessment form.
 - Structured deterministic assessment details.
+
+### 📚 Validated Occupational Safety Knowledge Base
+- Curated heat-safety topics grounded in OSHA/NIOSH guidance.
+- Source citations and validation metadata for every topic.
+- Multilingual search and topic retrieval (English, Hindi, Gujarati).
+- Exposed through dedicated `/api/v1/knowledge/*` endpoints.
+
+### 🧊 Cooling Resource Discovery
+- Nearby water stations, shelters, refuge centres and shade.
+- OpenStreetMap Overpass-powered proximity search by coordinates and radius.
+- Category filtering, distance sorting and source links with attribution.
+
+### 👔 Supervisor Monitoring Dashboard
+- Cohort-level risk overview built from stored assessment summaries.
+- Urgent-case list, site hotspots and recent-assessment tables.
+- Data-completeness indicators and explicit monitoring limitations.
 
 ---
 
@@ -162,6 +184,8 @@ The deterministic engine provides structured evaluation independently of LLM-gen
 | AI Framework | Strands Agents SDK |
 | Foundation Model | Amazon Bedrock Nova Lite |
 | Weather Data | Open-Meteo API |
+| Resource Discovery | OpenStreetMap Overpass API |
+| Localization | English, Hindi, Gujarati (i18n context + translations) |
 | Data Validation | Pydantic |
 | HTTP Client | HTTPX |
 | Cloud Platform | Amazon Web Services |
@@ -184,14 +208,20 @@ heatshield-ai/
 │   │   │
 │   │   ├── engine/
 │   │   │   ├── heat_assessment.py
-│   │   │   └── safety_alerts.py
+│   │   │   ├── safety_alerts.py
+│   │   │   ├── monitor.py            # Supervisor monitoring aggregation
+│   │   │   └── store.py              # Assessment record store
+│   │   │
+│   │   ├── knowledge/
+│   │   │   └── safety_knowledge.py   # Validated occupational safety KB
 │   │   │
 │   │   ├── schemas/
 │   │   │   └── worker.py
 │   │   │
 │   │   ├── tools/
 │   │   │   ├── weather_tool.py
-│   │   │   └── exposure_tool.py
+│   │   │   ├── exposure_tool.py
+│   │   │   └── cooling_tool.py       # Cooling resource discovery (Overpass)
 │   │   │
 │   │   ├── api.py
 │   │   └── first_agent.py
@@ -201,17 +231,25 @@ heatshield-ai/
 ├── frontend/
 │   ├── public/
 │   ├── src/
-│   │   └── app/
-│   │       ├── page.tsx
-│   │       ├── globals.css
-│   │       └── layout.tsx
+│   │   ├── app/
+│   │   │   ├── page.tsx              # Worker assessment (multilingual)
+│   │   │   ├── guidance/page.tsx     # Safety knowledge base browser
+│   │   │   ├── resources/page.tsx    # Cooling resource discovery
+│   │   │   ├── dashboard/page.tsx    # Supervisor monitoring dashboard
+│   │   │   ├── globals.css
+│   │   │   └── layout.tsx
+│   │   ├── components/
+│   │   │   └── AppShell.tsx           # Shared shell + language switcher
+│   │   └── lib/
+│   │       ├── i18n.tsx               # Language provider / useI18n hook
+│   │       └── translations.ts        # English / Hindi / Gujarati strings
 │   └── package.json
+│
+├── infrastructure/                    # AWS production deployment configs
 │
 ├── demo/
 │
 ├── docs/
-│
-├── infrastructure/
 │
 ├── .gitignore
 ├── LICENSE
@@ -351,6 +389,14 @@ The backend will be available at:
 | `GET /` | API information |
 | `GET /health` | Health check |
 | `POST /api/v1/assess` | Execute complete assessment |
+| `GET /api/v1/knowledge/topics` | List validated safety knowledge topics |
+| `GET /api/v1/knowledge/topics/{topic_id}` | Retrieve a topic (supports `language`) |
+| `GET /api/v1/knowledge/search` | Search the knowledge base (`q`, `language`) |
+| `GET /api/v1/knowledge/validate` | Knowledge-base validation metadata |
+| `POST /api/v1/cooling-resources` | Discover nearby cooling resources |
+| `GET /api/v1/supervisor/overview` | Supervisor cohort monitoring overview |
+| `POST /api/v1/supervisor/overview` | Aggregate externally supplied records |
+| `DELETE /api/v1/supervisor/records` | Clear stored assessment records |
 | `GET /docs` | Interactive Swagger documentation |
 
 ### 8. Start the Frontend Dashboard
@@ -364,6 +410,15 @@ npm run dev
 ```
 
 The dashboard will be available at [http://localhost:3000](http://localhost:3000).
+
+| Route | Page |
+|---|---|
+| `/` | Multilingual worker assessment interface |
+| `/guidance` | Validated occupational safety knowledge base |
+| `/resources` | Cooling resource discovery |
+| `/dashboard` | Supervisor monitoring dashboard |
+
+Use the language switcher in the header to change between English, Hindi and Gujarati.
 It sends assessments to `http://127.0.0.1:8000` by default. To use a different
 backend URL, create `frontend/.env.local`:
 
@@ -500,11 +555,45 @@ Suspected heatstroke symptoms, including confusion, seizures, collapse or loss o
 - [x] Responsive frontend assessment dashboard.
 - [x] Frontend-to-backend assessment integration.
 - [x] Proactive safety alerts.
-- [ ] Multilingual worker interface.
-- [ ] Validated occupational safety knowledge base.
-- [ ] Cooling resource discovery.
-- [ ] Supervisor monitoring dashboard.
+- [x] Multilingual worker interface (English, Hindi, Gujarati).
+- [x] Validated occupational safety knowledge base.
+- [x] Cooling resource discovery.
+- [x] Supervisor monitoring dashboard.
 - [ ] AWS production deployment.
+
+---
+
+## ☁️ AWS Production Deployment (Planned)
+
+Target architecture for production on AWS (`ap-south-1`):
+
+| Layer | Service |
+|---|---|
+| Frontend hosting | Amazon S3 + CloudFront (or AWS Amplify Hosting) |
+| Backend API | AWS App Runner (containerized FastAPI) or ECS Fargate |
+| AI models | Amazon Bedrock (Nova Lite) via Strands Agents |
+| Configuration & secrets | AWS Systems Manager Parameter Store / Secrets Manager |
+| IaC | SAM/CloudFormation templates under `infrastructure/` |
+
+Deployment outline:
+
+```bash
+# 1. Build and push the backend container
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin <account>.dkr.ecr.ap-south-1.amazonaws.com
+docker build -t heatshield-backend ./backend
+docker push heatshield-backend
+
+# 2. Deploy backend (App Runner example)
+sam deploy --guided --stack-name heatshield-api --region ap-south-1
+
+# 3. Build and upload the static frontend
+cd frontend && npm run build && aws s3 sync ./out s3://heatshield-web
+
+# 4. Grant the backend execution role Bedrock model-invocation permissions
+```
+
+The `infrastructure/` directory will hold the CloudFormation/SAM templates,
+Dockerfiles and IAM policies as this step is implemented.
 
 ---
 
