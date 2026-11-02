@@ -162,8 +162,9 @@ def create_assessment(payload: HeatAssessmentRequest):
 
         # Store a supervisor-facing summary (best effort; never fails
         # the worker's assessment request).
+        stored_summary: dict | None = None
         try:
-            save_assessment(
+            stored_summary = save_assessment(
                 result,
                 language=payload.language,
                 worker_name=payload.worker_name,
@@ -171,10 +172,15 @@ def create_assessment(payload: HeatAssessmentRequest):
         except Exception:  # pragma: no cover - defensive
             logger.exception("Assessment summary could not be stored.")
 
+        response_result = dict(result)
+
+        if stored_summary:
+            response_result["assessment_id"] = stored_summary["assessment_id"]
+
         return {
             "success": True,
             "timestamp": datetime.now(timezone.utc).isoformat(),
-            "result": result,
+            "result": response_result,
         }
 
     except HTTPException:
