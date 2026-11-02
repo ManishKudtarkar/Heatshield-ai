@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import logging
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -59,6 +60,16 @@ class HeatAssessmentRequest(BaseModel):
 
     worker: WorkerProfile
 
+    language: Literal["en", "hi", "gu"] = Field(
+        default="en",
+        description=(
+            "Worker interface language. Localizes deterministic safety "
+            "alerts and instructs the advisory agents to respond in this "
+            "language. Supported: en, hi, gu."
+        ),
+        examples=["hi"],
+    )
+
 
 # --------------------------------------------------
 # ROOT ENDPOINT
@@ -109,6 +120,7 @@ def create_assessment(payload: HeatAssessmentRequest):
         result = run_heatshield(
             location=payload.location,
             worker_data=worker_data,
+            language=payload.language,
         )
 
         if not isinstance(result, dict):

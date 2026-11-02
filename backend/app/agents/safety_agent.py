@@ -108,14 +108,34 @@ safety_agent = Agent(
 
 
 # -----------------------------------------------
+# SUPPORTED LANGUAGES
+# -----------------------------------------------
+
+_LANGUAGE_NAMES = {
+    "en": "English",
+    "hi": "Hindi",
+    "gu": "Gujarati",
+}
+
+
+# -----------------------------------------------
 # ADVISORY FUNCTION
 # -----------------------------------------------
 
-def generate_safety_advisory(assessment: dict) -> str:
+def generate_safety_advisory(
+    assessment: dict,
+    safety_alerts: dict | None = None,
+    language: str = "en",
+) -> str:
     """
     Generate safety guidance from deterministic
-    assessment results.
+    assessment results and proactive safety alerts.
+
+    The ``language`` code instructs the agent to respond in the
+    worker's preferred language.
     """
+
+    language_name = _LANGUAGE_NAMES.get(language, "English")
 
     if not assessment.get("success"):
         return "Safety advisory unavailable: assessment failed."
@@ -134,12 +154,27 @@ def generate_safety_advisory(assessment: dict) -> str:
         a complete occupational heat-risk assessment.
         """
 
+    alerts_instruction = ""
+    if safety_alerts and safety_alerts.get("success"):
+        alerts_instruction = f"""
+        PROACTIVE SAFETY ALERTS (deterministic, authoritative):
+
+        {json.dumps(safety_alerts, indent=2, ensure_ascii=False)}
+
+        Align your advisory with these alerts.
+        Do not contradict or override them.
+        Reference the most important alerts and their guidance.
+        Do not invent additional alert triggers.
+        """
+
     prompt = f"""
     Review the following HeatShield AI assessment.
 
     ASSESSMENT DATA:
 
     {json.dumps(assessment, indent=2, ensure_ascii=False)}
+
+    {alerts_instruction}
 
     {status_instruction}
 
@@ -150,6 +185,8 @@ def generate_safety_advisory(assessment: dict) -> str:
     that still needs to be collected.
 
     Do not invent facts or unsupported measurements.
+
+    Respond in {language_name}.
     """
 
     response = safety_agent(prompt)

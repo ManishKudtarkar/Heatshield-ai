@@ -1,8 +1,8 @@
 """
 HeatShield AI — Worker Exposure Intelligence Agent
 
-Interprets validated worker exposure information.
-Does not diagnose illness or calculate occupational risk.
+Analyses worker-specific occupational exposure factors
+using validated worker information.
 """
 
 from strands import Agent
@@ -15,47 +15,50 @@ AWS_REGION = "ap-south-1"
 MODEL_ID = "apac.amazon.nova-lite-v1:0"
 
 
+# ==================================================
+# BEDROCK MODEL
+# ==================================================
+
 model = BedrockModel(
     model_id=MODEL_ID,
     region_name=AWS_REGION,
 )
 
 
+# ==================================================
+# SYSTEM PROMPT
+# ==================================================
+
 SYSTEM_PROMPT = """
 You are the Worker Exposure Intelligence Agent for HeatShield AI.
 
-Your responsibility is to interpret worker-specific
-occupational conditions that may influence heat exposure.
+Your responsibility is to understand the occupational
+conditions that may influence a worker's heat exposure.
 
 You have access to the assess_worker_exposure tool.
 
 TOOL USAGE:
 
-1. If a raw worker profile is supplied, use the tool
-   to validate the information.
-2. If a validated exposure result is supplied, interpret
-   that result without calling the tool again.
-3. Use validated tool output as the source of truth.
-4. Never independently modify worker profile values.
+1. Always use assess_worker_exposure to validate
+   supplied worker information.
+2. Base your analysis on the validated tool output.
+3. Do not independently modify worker profile values.
 
 DATA INTEGRITY RULES:
 
 1. Never invent missing worker information.
 2. Clearly identify missing information.
 3. continuous_exposure_minutes and
-   break_frequency_minutes are separate fields.
+   break_frequency_minutes are two different fields.
 4. Never interpret continuous exposure duration
    as break frequency.
 5. Never copy a value from one field into another.
 6. If break_frequency_minutes is null, report:
    "Break frequency: Not provided."
-7. If work_area is present, report the supplied value.
-8. If work_area is null, identify it as missing.
-9. If water_access is true, report that water access
-   is available according to the supplied profile.
-10. If water_access is false, identify the lack of
-    reported water access as a practical concern.
-11. Never report missing information as complete.
+7. If information is missing, never report:
+   "No missing information identified."
+8. Preserve the exact values returned by the tool.
+9. Distinguish reported information from verified data.
 
 EXPOSURE ANALYSIS:
 
@@ -71,24 +74,18 @@ occupational heat exposure:
 - Continuous exposure duration
 - Work and recovery-break schedule
 
-STRICT SAFETY AND LANGUAGE RULES:
+SAFETY RULES:
 
 1. Do not diagnose medical conditions.
-2. Do not generate numerical risk scores.
-3. Do not assign occupational heat-risk categories.
-4. Do not independently declare a worker safe or unsafe.
-5. Do not predict an individual's probability of
-   developing heat-related illness.
-6. Do not say that an individual worker has an elevated
-   or high probability of heat-related illness.
-7. Describe exposure factors rather than medical outcomes.
-8. Use cautious wording such as:
-   - "This factor may influence heat exposure."
-   - "This condition requires occupational safety review."
-   - "Additional measurements are needed."
-9. Never invent work-rest ratios or break schedules.
-10. Recommend collecting missing information.
-11. Distinguish reported information from verified data.
+2. Do not generate arbitrary numerical risk scores.
+3. Do not independently declare a worker safe or unsafe.
+4. Do not assign occupational heat-risk categories.
+5. Do not claim that weather data alone determines
+   individual occupational heat exposure.
+6. Recommend collecting missing information.
+7. If drinking water is unavailable, highlight this
+   as a practical safety concern.
+8. Do not invent work-rest ratios or break schedules.
 
 OUTPUT FORMAT:
 
@@ -98,15 +95,20 @@ MISSING INFORMATION
 PRACTICAL SAFETY CONSIDERATIONS
 ASSESSMENT LIMITATIONS
 
-Use clear, professional language.
+Use clear, simple language.
 
-The deterministic HeatShield AI assessment engine is
-authoritative for assessment status and missing information.
+IMPORTANT:
 
-Your narrative must not contradict validated worker data
-or the deterministic assessment.
+The deterministic HeatShield AI assessment engine
+is authoritative for assessment status and missing
+information. Your narrative must not contradict
+validated worker data or deterministic results.
 """
 
+
+# ==================================================
+# EXPOSURE AGENT
+# ==================================================
 
 exposure_agent = Agent(
     model=model,
@@ -115,6 +117,10 @@ exposure_agent = Agent(
     callback_handler=None,
 )
 
+
+# ==================================================
+# TEST EXECUTION
+# ==================================================
 
 if __name__ == "__main__":
 
@@ -142,24 +148,27 @@ if __name__ == "__main__":
     Work area:
     Outdoor construction site in Vadodara, Gujarat
 
-    IMPORTANT:
+    IMPORTANT DATA DISTINCTION:
 
-    Continuous exposure is 120 minutes.
-    Break frequency is not provided.
+    Continuous exposure duration is 120 minutes.
+    Break frequency is NOT PROVIDED.
+
     These are separate fields.
+    Do not use 120 minutes as the break frequency.
 
     Use the worker exposure tool.
-    Do not invent missing information.
-    Do not predict medical outcomes.
+    Identify exposure factors and missing information.
     Do not generate a numerical heat-risk score.
     """
 
     try:
+
         response = exposure_agent(prompt)
 
         print("\n" + "-" * 60)
         print("WORKER EXPOSURE REPORT")
         print("-" * 60)
+
         print(str(response))
 
         print("\n" + "=" * 60)
@@ -167,6 +176,8 @@ if __name__ == "__main__":
         print("=" * 60)
 
     except Exception as error:
+
         print("\nEXPOSURE AGENT EXECUTION FAILED")
         print(f"Error: {error}")
+
         raise

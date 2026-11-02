@@ -24,6 +24,18 @@ from app.agents.exposure_agent import exposure_agent
 from app.agents.safety_agent import generate_safety_advisory
 
 from app.engine.heat_assessment import assess_heat_exposure
+from app.engine.safety_alerts import generate_safety_alerts
+
+
+# ==================================================
+# SUPPORTED LANGUAGES
+# ==================================================
+
+_LANGUAGE_NAMES = {
+    "en": "English",
+    "hi": "Hindi",
+    "gu": "Gujarati",
+}
 
 
 # ==================================================
@@ -51,10 +63,19 @@ def clean_agent_output(response) -> str:
 # MAIN ORCHESTRATOR
 # ==================================================
 
-def run_heatshield(location: str, worker_data: dict) -> dict:
+def run_heatshield(
+    location: str,
+    worker_data: dict,
+    language: str = "en",
+) -> dict:
     """
     Execute the complete HeatShield AI workflow.
+
+    The ``language`` code localizes the deterministic safety alerts
+    and instructs the advisory agents to respond in that language.
     """
+
+    language_name = _LANGUAGE_NAMES.get(language, "English")
 
     print("\n" + "=" * 65)
     print("             HEATSHIELD AI")
@@ -65,7 +86,7 @@ def run_heatshield(location: str, worker_data: dict) -> dict:
     # STAGE 1: WEATHER RETRIEVAL
     # ----------------------------------------------
 
-    print("\n[1/5] Retrieving environmental intelligence...")
+    print("\n[1/6] Retrieving environmental intelligence...")
 
     weather = get_weather(location)
 
@@ -80,7 +101,7 @@ def run_heatshield(location: str, worker_data: dict) -> dict:
     # STAGE 2: WORKER VALIDATION
     # ----------------------------------------------
 
-    print("\n[2/5] Validating worker profile...")
+    print("\n[2/6] Validating worker profile...")
 
     worker = WorkerProfile(**worker_data)
 
@@ -92,7 +113,7 @@ def run_heatshield(location: str, worker_data: dict) -> dict:
     # STAGE 3A: CLIMATE INTELLIGENCE
     # ----------------------------------------------
 
-    print("\n[3/5] Running Climate Intelligence Agent...")
+    print("\n[3/6] Running Climate Intelligence Agent...")
 
     climate_prompt = f"""
 Analyse the following environmental weather data.
@@ -125,6 +146,8 @@ STRICT RULES:
 - Distinguish environmental observations from
   occupational heat assessments.
 - Do not diagnose medical conditions.
+
+Respond in {language_name}.
 """
 
     climate_result = climate_agent(climate_prompt)
@@ -137,7 +160,7 @@ STRICT RULES:
     # STAGE 3B: STRUCTURED EXPOSURE VALIDATION
     # ----------------------------------------------
 
-    print("\n[4/5] Validating worker exposure information...")
+    print("\n[4/6] Validating worker exposure information...")
 
     exposure_data = assess_worker_exposure_data(
         **validated_worker
@@ -203,6 +226,8 @@ PRACTICAL SAFETY CONSIDERATIONS
 ASSESSMENT LIMITATIONS
 
 Use simple, professional language.
+
+Respond in {language_name}.
 """
 
     exposure_result = exposure_agent(exposure_prompt)
@@ -249,12 +274,36 @@ Use simple, professional language.
     print("[SUCCESS] Data consistency verified.")
 
     # ----------------------------------------------
-    # STAGE 5: SAFETY ADVISORY
+    # STAGE 5: PROACTIVE SAFETY ALERTS
     # ----------------------------------------------
 
-    print("\n[5/5] Generating safety advisory...")
+    print("\n[5/6] Generating proactive safety alerts...")
 
-    advisory_result = generate_safety_advisory(assessment)
+    safety_alerts = generate_safety_alerts(
+        assessment=assessment,
+        worker=validated_worker,
+        language=language,
+    )
+
+    if not safety_alerts.get("success"):
+        raise RuntimeError(
+            f"Safety alerts generation failed: "
+            f"{safety_alerts.get('error')}"
+        )
+
+    print("[SUCCESS] Proactive safety alerts generated.")
+
+    # ----------------------------------------------
+    # STAGE 6: SAFETY ADVISORY
+    # ----------------------------------------------
+
+    print("\n[6/6] Generating safety advisory...")
+
+    advisory_result = generate_safety_advisory(
+        assessment,
+        safety_alerts=safety_alerts,
+        language=language,
+    )
 
     advisory_report = clean_agent_output(advisory_result)
 
@@ -278,6 +327,8 @@ Use simple, professional language.
         "validated_exposure_data": exposure_data,
 
         "deterministic_assessment": assessment,
+
+        "safety_alerts": safety_alerts,
 
         "safety_advisory": advisory_report,
     }
