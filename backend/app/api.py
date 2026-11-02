@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import logging
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -12,6 +12,11 @@ from app.engine.safety_alerts import (
     SUPPORTED_LANGUAGES,
     language_name,
 )
+from app.engine.supervisor_store import (
+    list_records,
+    record_assessment,
+)
+from app.tools.cooling_resources import discover_cooling_resources
 
 
 # --------------------------------------------------
@@ -159,6 +164,134 @@ def supported_languages():
 
 
 # --------------------------------------------------
+# COOLING RESOURCE DISCOVERY ENDPOINT
+# --------------------------------------------------
+
+@app.get("/api/v1/cooling-resources")
+def cooling_resources(
+    location: str = Query(
+        default="Vadodara",
+        min_length=2,
+        max_length=120,
+        description="City or worksite to search near.",
+    )
+):
+    """
+    Discover mapped public cooling resources (drinking-water points,
+    shaded rest points and public shelters) near a location.
+
+    Resources come from OpenStreetMap data and are not physically
+    verified; responses include explicit limitations.
+    """
+
+    result = discover_cooling_resources(location=location)
+
+    if not result.get("success"):
+        return {
+            "success": False,
+            "error": result.get("error"),
+            "resources": [],
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    return {
+        "success": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "result": result,
+    }
+
+
+# --------------------------------------------------
+# SUPERVISOR MONITORING DASHBOARD ENDPOINTS
+# --------------------------------------------------
+
+PRIORITY_ORDER = {
+    "critical_precaution": 3,
+    "heightened_precaution": 2,
+    "advisory": 1,
+    "none": 0,
+}
+
+
+@app.get("/api/v1/supervisor/dashboard")
+def supervisor_dashboard():
+    """
+    Aggregated supervisory view of recent assessments.
+
+    Shows team-wide precaution levels, attention items (assessments
+    with critical precautions or missing information) and coverage
+    gaps such as water access and shade availability. Screening
+    summaries only — no medical records.
+    """
+
+    records = list_records()
+
+    priority_counts: dict[str, int] = {}
+    for record in records:
+        key = record.get("highest_priority", "none")
+        priority_counts[key] = priority_counts.get(key, 0) + 1
+
+    attention_items = sorted(
+        (
+            record
+            for record in records
+            if record.get("has_critical_precaution")
+            or record.get("missing_information")
+        ),
+        key=lambda record: PRIORITY_ORDER.get(
+            record.get("highest_priority", "none"), 0
+        ),
+        reverse=True,
+    )
+
+    locations: dict[str, int] = {}
+    for record in records:
+        name = record.get("location") or "Unknown"
+        locations[name] = locations.get(name, 0) + 1
+
+    coverage_gaps = {
+        "no_water_access": sum(
+            1 for r in records if r.get("water_access") is False
+        ),
+        "no_shade": sum(
+            1 for r in records if r.get("shade_availability") == "none"
+        ),
+        "not_acclimatized": sum(
+            1 for r in records
+            if r.get("acclimatization") == "not_acclimatized"
+        ),
+    }
+
+    return {
+        "success": True,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "summary": {
+            "total_assessments": len(records),
+            "priority_counts": priority_counts,
+            "assessments_requiring_attention": len(attention_items),
+            "locations_covered": len(locations),
+            "coverage_gaps": coverage_gaps,
+        },
+        "locations": [
+            {"location": name, "assessment_count": count}
+            for name, count in sorted(
+                locations.items(), key=lambda item: -item[1]
+            )
+        ],
+        "attention_items": attention_items[:20],
+        "recent_assessments": records[:20],
+        "limitations": [
+            "Dashboard aggregates screening summaries of submitted "
+            "assessments; it does not perform live site monitoring.",
+            "Records reflect reported worker profiles at assessment "
+            "time, not current conditions.",
+            "This is a demonstration store; production deployments "
+            "should persist records with appropriate access control.",
+        ],
+    }
+
+
+# --------------------------------------------------
 # MAIN ASSESSMENT ENDPOINT
 # --------------------------------------------------
 
@@ -200,6 +333,12 @@ def create_assessment(payload: HeatAssessmentRequest):
             "Assessment completed successfully for: %s",
             payload.location,
         )
+
+        # Record a supervisory summary for the monitoring dashboard.
+        try:
+            record_assessment(result)
+        except Exception:  # dashboard recording must never fail an assessment
+            logger.exception("Supervisor dashboard recording failed.")
 
         return {
             "success": True,

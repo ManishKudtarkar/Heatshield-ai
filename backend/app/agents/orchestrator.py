@@ -16,6 +16,7 @@ import re
 
 from app.tools.weather_tool import get_weather
 from app.tools.exposure_tool import assess_worker_exposure_data
+from app.tools.cooling_resources import discover_cooling_resources
 
 from app.schemas.worker import WorkerProfile
 
@@ -25,6 +26,7 @@ from app.agents.safety_agent import generate_safety_advisory
 
 from app.engine.heat_assessment import assess_heat_exposure
 from app.engine.safety_alerts import generate_safety_alerts
+from app.engine.knowledge_base import retrieve_knowledge
 
 
 # ==================================================
@@ -333,6 +335,48 @@ Respond in {narrative_language_name}.
     print("[SUCCESS] Proactive safety alerts generated.")
 
     # ----------------------------------------------
+    # STAGE 5B: VALIDATED KNOWLEDGE BASE RETRIEVAL
+    # ----------------------------------------------
+
+    print("\nRetrieving validated occupational safety knowledge...")
+
+    knowledge_base = retrieve_knowledge(
+        weather_summary=assessment.get("weather_summary"),
+        worker_summary=assessment.get("worker_summary"),
+        language=language,
+    )
+
+    print(
+        f"[SUCCESS] {knowledge_base.get('entry_count', 0)} "
+        "validated knowledge entries retrieved."
+    )
+
+    # ----------------------------------------------
+    # STAGE 5C: COOLING RESOURCE DISCOVERY
+    # ----------------------------------------------
+
+    print("\nDiscovering nearby cooling resources...")
+
+    place = weather.get("location") or {}
+
+    cooling_resources = discover_cooling_resources(
+        location=place.get("name") or location,
+        latitude=place.get("latitude"),
+        longitude=place.get("longitude"),
+    )
+
+    if cooling_resources.get("success"):
+        print(
+            "[SUCCESS] Cooling resource discovery completed "
+            f"({cooling_resources.get('resource_count', 0)} mapped resources)."
+        )
+    else:
+        print(
+            "[NOTICE] Cooling resource discovery unavailable: "
+            f"{cooling_resources.get('error')}"
+        )
+
+    # ----------------------------------------------
     # STAGE 6: SAFETY ADVISORY
     # ----------------------------------------------
 
@@ -343,6 +387,7 @@ Respond in {narrative_language_name}.
         safety_alerts=safety_alerts,
         language=language,
         response_language=response_language,
+        knowledge_base=knowledge_base,
     )
 
     advisory_report = clean_agent_output(advisory_result)
@@ -377,6 +422,10 @@ Respond in {narrative_language_name}.
         "deterministic_assessment": assessment,
 
         "safety_alerts": safety_alerts,
+
+        "knowledge_base": knowledge_base,
+
+        "cooling_resources": cooling_resources,
 
         "safety_advisory": advisory_report,
     }

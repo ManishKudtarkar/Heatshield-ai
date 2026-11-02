@@ -10,6 +10,8 @@ import json
 from strands import Agent
 from strands.models import BedrockModel
 
+from app.engine.knowledge_base import format_knowledge_for_agent
+
 
 # -----------------------------------------------
 # CONFIGURATION
@@ -127,6 +129,7 @@ def generate_safety_advisory(
     safety_alerts: dict | None = None,
     language: str = "en",
     response_language: str | None = None,
+    knowledge_base: dict | None = None,
 ) -> str:
     """
     Generate safety guidance from deterministic
@@ -138,6 +141,11 @@ def generate_safety_advisory(
     (for example an English-speaking supervisor reviewing a Hindi
     worker assessment). When omitted, the advisory is written in the
     worker's own language.
+
+    ``knowledge_base`` optionally supplies validated occupational
+    heat-safety entries retrieved deterministically from the curated
+    HeatShield knowledge base; the advisory must remain consistent
+    with them.
     """
 
     language_name = _LANGUAGE_NAMES.get(language, "English")
@@ -177,6 +185,22 @@ def generate_safety_advisory(
         Do not invent additional alert triggers.
         """
 
+    knowledge_instruction = ""
+    if knowledge_base and knowledge_base.get("success"):
+        knowledge_instruction = f"""
+        VALIDATED OCCUPATIONAL SAFETY KNOWLEDGE BASE
+        (curated, deterministic grounding context):
+
+        {format_knowledge_for_agent(knowledge_base)}
+
+        Ground your recommendations in these validated entries.
+        Do not contradict them and do not present unvalidated
+        guidance as established practice. You may adapt wording to
+        the worker's situation, but every precaution you recommend
+        must be consistent with a listed entry or with the
+        assessment data itself.
+        """
+
     prompt = f"""
     Review the following HeatShield AI assessment.
 
@@ -185,6 +209,8 @@ def generate_safety_advisory(
     {json.dumps(assessment, indent=2, ensure_ascii=False)}
 
     {alerts_instruction}
+
+    {knowledge_instruction}
 
     {status_instruction}
 
