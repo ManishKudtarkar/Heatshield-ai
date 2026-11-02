@@ -44,8 +44,9 @@ The platform:
 2. Analyzes environmental conditions using an AI agent.
 3. Validates worker exposure information.
 4. Evaluates exposure factors through a deterministic assessment engine.
-5. Generates contextual safety recommendations.
-6. Identifies missing information that may affect the assessment.
+5. Generates proactive, evidence-grounded safety alerts.
+6. Generates contextual safety recommendations.
+7. Identifies missing information that may affect the assessment.
 
 Our initial focus is outdoor workers in Gujarat, India, with the architecture designed for broader deployment.
 
@@ -77,6 +78,7 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 
 ### 🛡️ Safety Advisory
 - Contextual preventive recommendations.
+- Proactive, evidence-grounded safety alerts with transparent triggers.
 - Worker and supervisor guidance.
 - Identification of missing information.
 - Explicit assessment limitations.
@@ -140,6 +142,7 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 | Climate Intelligence Agent | Interprets environmental weather observations and hourly forecasts. |
 | Worker Exposure Agent | Analyzes validated worker profiles and exposure factors. |
 | Deterministic Assessment Engine | Evaluates structured weather and worker information using Python logic. |
+| Proactive Safety Alerts Engine | Generates evidence-grounded precautionary alerts from assessment observations. |
 | Safety Advisory Agent | Generates contextual preventive guidance from assessment results. |
 | Orchestrator | Coordinates execution and checks consistency between assessment components. |
 
@@ -180,7 +183,8 @@ heatshield-ai/
 │   │   │   └── orchestrator.py
 │   │   │
 │   │   ├── engine/
-│   │   │   └── heat_assessment.py
+│   │   │   ├── heat_assessment.py
+│   │   │   └── safety_alerts.py
 │   │   │
 │   │   ├── schemas/
 │   │   │   └── worker.py
@@ -422,6 +426,7 @@ POST /api/v1/assess
     "worker_exposure_analysis": "...",
     "validated_exposure_data": {},
     "deterministic_assessment": {},
+    "safety_alerts": {},
     "safety_advisory": "..."
   }
 }
@@ -494,11 +499,11 @@ Suspected heatstroke symptoms, including confusion, seizures, collapse or loss o
 - [x] Successful end-to-end API assessment.
 - [x] Responsive frontend assessment dashboard.
 - [x] Frontend-to-backend assessment integration.
+- [x] Proactive safety alerts.
 - [ ] Multilingual worker interface.
 - [ ] Validated occupational safety knowledge base.
 - [ ] Cooling resource discovery.
 - [ ] Supervisor monitoring dashboard.
-- [ ] Proactive safety alerts.
 - [ ] AWS production deployment.
 
 ---

@@ -47,12 +47,33 @@ type DeterministicAssessment = {
   assessment_metadata?: Record<string, unknown>;
 };
 
+type SafetyAlert = {
+  id?: string;
+  priority?: "advisory" | "heightened_precaution" | "critical_precaution";
+  title?: string;
+  basis?: string;
+  triggers?: string[];
+  guidance?: string[];
+};
+
+type SafetyAlerts = {
+  success?: boolean;
+  alerts?: SafetyAlert[];
+  alert_count?: number;
+  highest_priority?: string;
+  has_critical_precaution?: boolean;
+  emergency_guidance?: string;
+  summary?: string;
+  limitations?: string[];
+};
+
 type AssessmentResult = {
   location?: string;
   climate_analysis?: string;
   worker_exposure_analysis?: string;
   safety_advisory?: string;
   deterministic_assessment?: DeterministicAssessment;
+  safety_alerts?: SafetyAlerts;
   validated_exposure_data?: Record<string, unknown>;
 };
 
@@ -86,6 +107,31 @@ function display(value: unknown) {
 
 function Metric({ icon: Icon, name, value, unit, context }: { icon: typeof Thermometer; name: string; value: unknown; unit?: string; context: string }) {
   return <article className="metric-card"><div className="metric-label"><Icon size={16} aria-hidden="true" />{name}</div><div className="metric-value">{display(value)}<small>{unit}</small></div><p>{context}</p></article>;
+}
+
+function AlertCard({ alert }: { alert: SafetyAlert }) {
+  const priority = alert.priority ?? "advisory";
+  const Icon = priority === "advisory" ? Info : AlertTriangle;
+  const tone = priority === "critical_precaution" ? "critical" : priority === "heightened_precaution" ? "heightened" : "advisory";
+  return (
+    <article className={`alert-card alert-${priority}`}>
+      <div className="alert-head">
+        <span className={`alert-icon ${tone}`}><Icon size={16} aria-hidden="true" /></span>
+        <h3>{alert.title}</h3>
+        <span className={`alert-priority-tag priority-${priority}`}>{label(priority)}</span>
+      </div>
+      {alert.triggers && alert.triggers.length > 0 && (
+        <ul className="alert-triggers">
+          {alert.triggers.map((trigger, index) => <li key={index}>{trigger}</li>)}
+        </ul>
+      )}
+      {alert.guidance && alert.guidance.length > 0 && (
+        <ul className="alert-guidance">
+          {alert.guidance.map((item, index) => <li key={index}>{item}</li>)}
+        </ul>
+      )}
+    </article>
+  );
 }
 
 export default function Home() {
@@ -140,6 +186,7 @@ export default function Home() {
   const deterministic = assessment?.deterministic_assessment;
   const weather = deterministic?.weather_summary;
   const missing = deterministic?.missing_information ?? [];
+  const alerts = assessment?.safety_alerts;
 
   return (
     <div className="app-shell">
@@ -192,7 +239,39 @@ export default function Home() {
             <aside className="assessment-context panel"><div className="section-heading"><div><p className="overline">ASSESSMENT CONTEXT</p><h2>What you&apos;ll receive</h2></div></div><ul className="context-list"><li><CloudSun size={17} /><div><strong>Environmental observations</strong><span>Current temperature, humidity, apparent temperature, and wind from Open-Meteo.</span></div></li><li><ClipboardList size={17} /><div><strong>Exposure factors</strong><span>A transparent summary of the reported work conditions and what is missing.</span></div></li><li><ShieldCheck size={17} /><div><strong>Practical controls</strong><span>Safety guidance grounded in the assessment, with its limitations clearly stated.</span></div></li></ul><div className="context-disclaimer"><Info size={16} /><p>Apparent temperature is not WBGT. This tool provides screening support, not a medical diagnosis or a worksite measurement.</p></div></aside>
           </section>
 
-          {assessment && <section className="results-section"><div className="section-heading"><div><p className="overline">ASSESSMENT OUTPUT</p><h2>What to do next</h2></div><span className="status-tag">Screening only</span></div><div className="results-grid"><article className="panel advisory-panel"><div className="panel-title"><span className="icon-box amber"><AlertTriangle size={17} /></span><div><p className="overline">SAFETY ADVISORY</p><h3>Recommended guidance</h3></div></div><div className="narrative">{assessment.safety_advisory || "No advisory was returned."}</div></article><article className="panel details-panel"><p className="overline">MISSING INFORMATION</p><h3>{missing.length ? `${missing.length} item${missing.length === 1 ? "" : "s"} to collect` : "Profile complete"}</h3>{missing.length ? <ul className="missing-list">{missing.map((item) => <li key={item}><AlertTriangle size={14} />{label(item)}</li>)}</ul> : <p className="panel-copy">All tracked worker profile fields were supplied.</p>}<details><summary>View assessment limitations</summary><ul className="limitation-list">{(deterministic?.limitations ?? []).map((item) => <li key={item}>{item}</li>)}</ul></details></article></div></section>}
+          {assessment && (
+            <>
+              {alerts && alerts.alert_count ? (
+                <section className="alerts-section">
+                  <div className="section-heading">
+                    <div>
+                      <p className="overline">PROACTIVE SAFETY ALERTS</p>
+                      <h2>Safety alerts</h2>
+                    </div>
+                    <span className={`alert-priority-tag priority-${alerts.highest_priority}`}>{label(alerts.highest_priority ?? "none")}</span>
+                  </div>
+                  {alerts.has_critical_precaution ? (
+                    <div className="emergency-banner" role="alert">
+                      <AlertTriangle size={20} aria-hidden="true" />
+                      <div>
+                        <strong>Seek emergency medical assistance if needed</strong>
+                        <span>{alerts.emergency_guidance}</span>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="alerts-grid">
+                    {(alerts.alerts ?? []).map((alert) => <AlertCard key={alert.id ?? alert.title} alert={alert} />)}
+                  </div>
+                  <p className="alerts-summary">{alerts.summary}</p>
+                  <details>
+                    <summary>View alert limitations</summary>
+                    <ul className="limitation-list">{(alerts.limitations ?? []).map((item) => <li key={item}>{item}</li>)}</ul>
+                  </details>
+                </section>
+              ) : null}
+              <section className="results-section"><div className="section-heading"><div><p className="overline">ASSESSMENT OUTPUT</p><h2>What to do next</h2></div><span className="status-tag">Screening only</span></div><div className="results-grid"><article className="panel advisory-panel"><div className="panel-title"><span className="icon-box amber"><AlertTriangle size={17} /></span><div><p className="overline">SAFETY ADVISORY</p><h3>Recommended guidance</h3></div></div><div className="narrative">{assessment.safety_advisory || "No advisory was returned."}</div></article><article className="panel details-panel"><p className="overline">MISSING INFORMATION</p><h3>{missing.length ? `${missing.length} item${missing.length === 1 ? "" : "s"} to collect` : "Profile complete"}</h3>{missing.length ? <ul className="missing-list">{missing.map((item) => <li key={item}><AlertTriangle size={14} />{label(item)}</li>)}</ul> : <p className="panel-copy">All tracked worker profile fields were supplied.</p>}<details><summary>View assessment limitations</summary><ul className="limitation-list">{(deterministic?.limitations ?? []).map((item) => <li key={item}>{item}</li>)}</ul></details></article></div></section>
+            </>
+          )}
           <footer><strong>Safety note:</strong> If someone shows confusion, seizures, collapse, or loss of consciousness, seek immediate emergency medical assistance. Do not delay for an AI assessment.</footer>
         </div>
       </main>
