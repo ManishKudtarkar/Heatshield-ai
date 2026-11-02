@@ -47,16 +47,47 @@ type DeterministicAssessment = {
   assessment_metadata?: Record<string, unknown>;
 };
 
+type SafetyAlert = {
+  id?: string;
+  title?: string;
+  priority?: string;
+  basis?: string;
+  triggers?: string[];
+  guidance?: string[];
+};
+
+type SafetyAlerts = {
+  success?: boolean;
+  language?: string;
+  alerts?: SafetyAlert[];
+  alert_count?: number;
+  counts?: Record<string, number>;
+  highest_priority?: string;
+  has_critical_precaution?: boolean;
+  emergency_guidance?: string;
+  summary?: string;
+  limitations?: string[];
+};
+
 type AssessmentResult = {
   location?: string;
+  language?: string;
+  response_language?: string;
   climate_analysis?: string;
   worker_exposure_analysis?: string;
   safety_advisory?: string;
   deterministic_assessment?: DeterministicAssessment;
   validated_exposure_data?: Record<string, unknown>;
+  safety_alerts?: SafetyAlerts;
 };
 
 type AssessmentResponse = { success: boolean; result?: AssessmentResult; detail?: string | { message?: string } };
+
+const LANGUAGES = [
+  { code: "en", label: "English" },
+  { code: "hi", label: "हिन्दी (Hindi)" },
+  { code: "gu", label: "ગુજરાતી (Gujarati)" },
+];
 
 const initialForm = {
   location: "Vadodara",
@@ -71,6 +102,8 @@ const initialForm = {
   continuous_exposure_minutes: "120",
   break_frequency_minutes: "",
   work_area: "Outdoor construction site",
+  language: "en",
+  response_language: "",
 };
 
 function label(value: string) {

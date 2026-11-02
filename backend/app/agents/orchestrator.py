@@ -67,15 +67,27 @@ def run_heatshield(
     location: str,
     worker_data: dict,
     language: str = "en",
+    response_language: str | None = None,
 ) -> dict:
     """
     Execute the complete HeatShield AI workflow.
 
     The ``language`` code localizes the deterministic safety alerts
     and instructs the advisory agents to respond in that language.
+
+    ``response_language`` optionally overrides the display language of
+    the narrative (agent-generated) sections only — for example an
+    English-speaking supervisor reviewing a Hindi worker assessment.
+    When omitted, narratives are produced directly in ``language``.
+    Deterministic safety alerts always follow ``language``.
     """
 
     language_name = _LANGUAGE_NAMES.get(language, "English")
+    narrative_language_name = (
+        _LANGUAGE_NAMES[response_language]
+        if response_language in _LANGUAGE_NAMES
+        else language_name
+    )
 
     print("\n" + "=" * 65)
     print("             HEATSHIELD AI")
@@ -134,6 +146,17 @@ Responsibilities:
    for outdoor workers.
 6. State the limitations of the data.
 
+LANGUAGE RULES:
+
+- If the requested response language is not English, translate every
+  heading and sentence into that language.
+- Never leave untranslated English sentences inside a non-English
+  report. Keep only proper nouns, units and measurement values
+  unchanged.
+- The narrative response language ({narrative_language_name}) may
+  differ from the worker's own language; always follow the narrative
+  response language requested below.
+
 STRICT RULES:
 
 - Use only the supplied weather data.
@@ -147,7 +170,7 @@ STRICT RULES:
   occupational heat assessments.
 - Do not diagnose medical conditions.
 
-Respond in {language_name}.
+Respond in {narrative_language_name}.
 """
 
     climate_result = climate_agent(climate_prompt)
@@ -217,6 +240,20 @@ STRICT DATA RULES:
 - Do not diagnose medical conditions.
 - Do not declare the worker safe or unsafe.
 
+LANGUAGE RULES:
+
+- If the requested response language is not English, translate every
+  section heading into that language as well.
+- Translate enumerated field names (for example
+  "continuous_exposure_minutes" or "shade_availability") into the
+  requested language using plain, worker-friendly wording.
+- Never leave untranslated English sentences or snake_case field
+  identifiers inside a non-English report.
+- Keep only proper nouns, units and measurement values unchanged.
+- The narrative response language ({narrative_language_name}) may
+  differ from the worker's own language; always follow the narrative
+  response language requested below.
+
 Use this output structure:
 
 WORKER PROFILE
@@ -225,9 +262,11 @@ MISSING INFORMATION
 PRACTICAL SAFETY CONSIDERATIONS
 ASSESSMENT LIMITATIONS
 
+(Translate these headings into the requested response language.)
+
 Use simple, professional language.
 
-Respond in {language_name}.
+Respond in {narrative_language_name}.
 """
 
     exposure_result = exposure_agent(exposure_prompt)
@@ -303,6 +342,7 @@ Respond in {language_name}.
         assessment,
         safety_alerts=safety_alerts,
         language=language,
+        response_language=response_language,
     )
 
     advisory_report = clean_agent_output(advisory_result)
@@ -319,6 +359,14 @@ Respond in {language_name}.
         "project": "HeatShield AI",
 
         "location": location,
+
+        "language": language,
+
+        "response_language": (
+            response_language
+            if response_language in _LANGUAGE_NAMES
+            else language
+        ),
 
         "climate_analysis": climate_report,
 

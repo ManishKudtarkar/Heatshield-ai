@@ -8,6 +8,10 @@ from pydantic import BaseModel, Field, ConfigDict
 
 from app.agents.orchestrator import run_heatshield
 from app.schemas.worker import WorkerProfile
+from app.engine.safety_alerts import (
+    SUPPORTED_LANGUAGES,
+    language_name,
+)
 
 
 # --------------------------------------------------
@@ -45,6 +49,32 @@ app.add_middleware(
 
 
 # --------------------------------------------------
+# SUPPORTED INTERFACE LANGUAGES
+# --------------------------------------------------
+
+class LanguageOption(BaseModel):
+    code: str
+    name: str
+    native_name: str
+
+
+LANGUAGE_NATIVE_NAMES = {
+    "en": "English",
+    "hi": "\u0939\u093f\u0928\u094d\u0926\u0940",       # Hindi
+    "gu": "\u0a97\u0ac1\u0a9c\u0ab0\u0abe\u0aa4\u0ac0",  # Gujarati
+}
+
+SUPPORTED_LANGUAGE_OPTIONS = [
+    LanguageOption(
+        code=code,
+        name=language_name(code),
+        native_name=LANGUAGE_NATIVE_NAMES.get(code, language_name(code)),
+    )
+    for code in SUPPORTED_LANGUAGES
+]
+
+
+# --------------------------------------------------
 # REQUEST SCHEMA
 # --------------------------------------------------
 
@@ -65,9 +95,22 @@ class HeatAssessmentRequest(BaseModel):
         description=(
             "Worker interface language. Localizes deterministic safety "
             "alerts and instructs the advisory agents to respond in this "
-            "language. Supported: en, hi, gu."
+            "language. Supported: en (English), hi (Hindi), gu (Gujarati). "
+            "Discoverable via GET /api/v1/languages."
         ),
         examples=["hi"],
+    )
+
+    response_language: str | None = Field(
+        default=None,
+        description=(
+            "Optional display language for narrative sections returned to "
+            "the worker interface (for example \"en\" to read a Hindi "
+            "assessment in English). When omitted, narrative sections are "
+            "shown directly in the selected worker language. Deterministic "
+            "safety alerts always follow the worker ``language``."
+        ),
+        examples=["en"],
     )
 
 
@@ -102,6 +145,20 @@ def health_check():
 
 
 # --------------------------------------------------
+# SUPPORTED LANGUAGES ENDPOINT
+# --------------------------------------------------
+
+@app.get("/api/v1/languages")
+def supported_languages():
+    """Interface languages available for worker assessments."""
+    return {
+        "success": True,
+        "default": "en",
+        "languages": [option.model_dump() for option in SUPPORTED_LANGUAGE_OPTIONS],
+    }
+
+
+# --------------------------------------------------
 # MAIN ASSESSMENT ENDPOINT
 # --------------------------------------------------
 
@@ -121,6 +178,7 @@ def create_assessment(payload: HeatAssessmentRequest):
             location=payload.location,
             worker_data=worker_data,
             language=payload.language,
+            response_language=payload.response_language,
         )
 
         if not isinstance(result, dict):

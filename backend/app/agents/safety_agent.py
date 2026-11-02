@@ -126,16 +126,26 @@ def generate_safety_advisory(
     assessment: dict,
     safety_alerts: dict | None = None,
     language: str = "en",
+    response_language: str | None = None,
 ) -> str:
     """
     Generate safety guidance from deterministic
     assessment results and proactive safety alerts.
 
-    The ``language`` code instructs the agent to respond in the
-    worker's preferred language.
+    The ``language`` code is the worker's preferred language and is
+    kept alongside the advisory context. ``response_language``
+    optionally overrides the display language of the advisory itself
+    (for example an English-speaking supervisor reviewing a Hindi
+    worker assessment). When omitted, the advisory is written in the
+    worker's own language.
     """
 
     language_name = _LANGUAGE_NAMES.get(language, "English")
+    narrative_language_name = (
+        _LANGUAGE_NAMES[response_language]
+        if response_language in _LANGUAGE_NAMES
+        else language_name
+    )
 
     if not assessment.get("success"):
         return "Safety advisory unavailable: assessment failed."
@@ -186,7 +196,21 @@ def generate_safety_advisory(
 
     Do not invent facts or unsupported measurements.
 
-    Respond in {language_name}.
+    LANGUAGE RULES:
+
+    - Respond entirely in {narrative_language_name}.
+    - Translate every section heading and sentence into
+      {narrative_language_name}; never leave untranslated English text
+      inside the advisory.
+    - Translate field identifiers (for example
+      "continuous_exposure_minutes") into plain, worker-friendly
+      {narrative_language_name} wording.
+    - Keep only proper nouns, units and measurement values unchanged.
+    - The deterministic safety alerts above are localized for a worker
+      using {language_name}; your advisory must be written in
+      {narrative_language_name}.
+
+    Respond in {narrative_language_name}.
     """
 
     response = safety_agent(prompt)
