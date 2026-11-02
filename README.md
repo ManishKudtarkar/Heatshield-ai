@@ -89,6 +89,32 @@ Our initial focus is outdoor workers in Gujarat, India, with the architecture de
 - Responsive worker assessment form.
 - Structured deterministic assessment details.
 
+### 🌐 Multilingual Worker Interface
+- English, Hindi and Gujarati interface support.
+- Localized precautionary alerts in the worker's preferred language.
+- Language discovery endpoint for client applications.
+
+### 📚 Validated Occupational Safety Knowledge Base
+- Curated occupational heat-safety guidance with explicit provenance.
+- Deterministic retrieval that grounds advisory agents.
+- Precautions and controls only — no risk scores or medical diagnosis.
+
+### 🧊 Cooling Resource Discovery
+- Nearby shaded rest points, drinking-water stations and public shelters.
+- Powered by OpenStreetMap data with verifiable resource provenance.
+- Explicit limitations since remote availability cannot be confirmed.
+
+### 👔 Supervisor Monitoring Dashboard
+- Aggregated team-wide precaution levels from recent assessments.
+- Attention items for critical precautions and missing information.
+- Coverage-gap visibility such as water access and shade availability.
+- Screening summaries only — no personal medical records.
+
+### 🚨 Proactive Safety Alerts
+- Deterministic, evidence-grounded precautionary alerts.
+- Each alert lists the specific observations that triggered it.
+- Emergency guidance surfaced alongside critical-precaution alerts.
+
 ---
 
 ## 🏗️ System Architecture
@@ -347,6 +373,9 @@ The backend will be available at:
 | `GET /` | API information |
 | `GET /health` | Health check |
 | `POST /api/v1/assess` | Execute complete assessment |
+| `GET /api/v1/languages` | Supported interface languages |
+| `GET /api/v1/cooling-resources` | Discover cooling resources near a location |
+| `GET /api/v1/supervisor/dashboard` | Aggregated supervisor monitoring view |
 | `GET /docs` | Interactive Swagger documentation |
 
 ### 8. Start the Frontend Dashboard
@@ -494,11 +523,11 @@ Suspected heatstroke symptoms, including confusion, seizures, collapse or loss o
 - [x] Successful end-to-end API assessment.
 - [x] Responsive frontend assessment dashboard.
 - [x] Frontend-to-backend assessment integration.
-- [ ] Multilingual worker interface.
-- [ ] Validated occupational safety knowledge base.
-- [ ] Cooling resource discovery.
-- [ ] Supervisor monitoring dashboard.
-- [ ] Proactive safety alerts.
+- [x] Multilingual worker interface.
+- [x] Validated occupational safety knowledge base.
+- [x] Cooling resource discovery.
+- [x] Supervisor monitoring dashboard.
+- [x] Proactive safety alerts.
 - [ ] AWS production deployment.
 
 ---
