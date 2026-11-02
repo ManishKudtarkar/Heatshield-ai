@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { AppShell, API_URL } from "@/components/AppShell";
+import { useI18n } from "@/lib/i18n";
 import {
   Activity,
   AlertTriangle,
@@ -21,8 +23,6 @@ import {
   Wind,
   X,
 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
 type WeatherSummary = {
   location?: string;
