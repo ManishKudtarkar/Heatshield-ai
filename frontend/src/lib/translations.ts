@@ -71,6 +71,8 @@ export interface Strings {
     locationPh: string;
     workArea: string;
     workAreaPh: string;
+    workerName: string;
+    workerNamePh: string;
     occupation: string;
     shiftHours: string;
     workload: string;
@@ -287,6 +289,8 @@ const en: Strings = {
     locationPh: "City or worksite",
     workArea: "Work area",
     workAreaPh: "Describe the worksite",
+    workerName: "Worker name (optional)",
+    workerNamePh: "Shown on the supervisor dashboard",
     occupation: "Occupation",
     shiftHours: "Shift duration (hours)",
     workload: "Workload",
@@ -511,6 +515,8 @@ const hi: Strings = {
     locationPh: "शहर या कार्यस्थल",
     workArea: "कार्य क्षेत्र",
     workAreaPh: "कार्यस्थल का वर्णन करें",
+    workerName: "श्रमिक का नाम (वैकल्पिक)",
+    workerNamePh: "सुपरवाइज़र डैशबोर्ड पर दिखाई देगा",
     occupation: "व्यवसाय",
     shiftHours: "पाली अवधि (घंटे)",
     workload: "कार्यभार",
@@ -735,6 +741,8 @@ const gu: Strings = {
     locationPh: "શહેર કે કાર્યસ્થળ",
     workArea: "કાર્ય વિસ્તાર",
     workAreaPh: "કાર્યસ્થળનું વર્ણન કરો",
+    workerName: "શ્રમિકનું નામ (વૈકલ્પિક)",
+    workerNamePh: "સુપરવાઇઝર ડેશબોર્ડ પર દેખાશે",
     occupation: "વ્યવસાય",
     shiftHours: "પાળી અવધિ (કલાક)",
     workload: "કાર્યભાર",
