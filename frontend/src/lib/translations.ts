@@ -119,6 +119,82 @@ export interface Strings {
   };
   footer: { label: string; note: string };
   langSwitch: { label: string };
+  guidance: {
+    overline: string;
+    title: string;
+    subtitle: string;
+    searchPh: string;
+    searchBtn: string;
+    validated: string;
+    reviewed: string;
+    sources: string;
+    guidanceHeading: string;
+    noResults: string;
+    resultsCount: string;
+    kbVersion: string;
+    integrityOk: string;
+    browseAll: string;
+    backToList: string;
+    category: string;
+    loadError: string;
+  };
+  resources: {
+    overline: string;
+    title: string;
+    subtitle: string;
+    lat: string;
+    lng: string;
+    radius: string;
+    radiusUnit: string;
+    categories: string;
+    catWater: string;
+    catShelter: string;
+    catRefuge: string;
+    catShade: string;
+    findBtn: string;
+    searching: string;
+    found: string;
+    noneFound: string;
+    distance: string;
+    sourceLink: string;
+    osmNote: string;
+    useLocation: string;
+    loadError: string;
+  };
+  dashboard: {
+    overline: string;
+    title: string;
+    subtitle: string;
+    refresh: string;
+    clear: string;
+    clearConfirm: string;
+    cleared: string;
+    total: string;
+    critical: string;
+    heightened: string;
+    advisory: string;
+    noneRisk: string;
+    urgentHeading: string;
+    noUrgent: string;
+    locationsHeading: string;
+    recentHeading: string;
+    completenessHeading: string;
+    completeShare: string;
+    incomplete: string;
+    worker: string;
+    locationCol: string;
+    riskCol: string;
+    tempCol: string;
+    timeCol: string;
+    alertsCol: string;
+    assessmentsCol: string;
+    worstCol: string;
+    maxTempCol: string;
+    empty: string;
+    limitationsHeading: string;
+    loadError: string;
+    unusable: string;
+  };
 }
 
 const en: Strings = {
@@ -267,6 +343,82 @@ const en: Strings = {
     note: "If someone shows confusion, seizures, collapse, or loss of consciousness, seek immediate emergency medical assistance. Do not delay for an AI assessment.",
   },
   langSwitch: { label: "Language" },
+  guidance: {
+    overline: "VALIDATED SAFETY KNOWLEDGE",
+    title: "Occupational heat-safety guidance",
+    subtitle: "Curated guidance reviewed against OSHA / NIOSH / CDC sources. Every topic is validated and cited.",
+    searchPh: "Search topics, e.g. hydration, WBGT, acclimatization",
+    searchBtn: "Search",
+    validated: "Validated",
+    reviewed: "Reviewed",
+    sources: "Sources",
+    guidanceHeading: "Guidance",
+    noResults: "No matching topics found. Try another term or browse all topics.",
+    resultsCount: "{count} topic(s) found",
+    kbVersion: "Knowledge base version",
+    integrityOk: "All topics validated and cited",
+    browseAll: "Browse all topics",
+    backToList: "Back to topic list",
+    category: "Category",
+    loadError: "Safety guidance could not be loaded. Check the API connection.",
+  },
+  resources: {
+    overline: "COOLING RESOURCE DISCOVERY",
+    title: "Find cooling resources near a worksite",
+    subtitle: "Publicly mapped drinking water, shelters, indoor refuges and shaded spaces from OpenStreetMap.",
+    lat: "Worksite latitude",
+    lng: "Worksite longitude",
+    radius: "Search radius",
+    radiusUnit: "m",
+    categories: "Categories",
+    catWater: "Drinking water",
+    catShelter: "Cooling shelters",
+    catRefuge: "Indoor refuges",
+    catShade: "Shaded spaces",
+    findBtn: "Find resources",
+    searching: "Searching map data...",
+    found: "{count} resource(s) found",
+    noneFound: "No mapped cooling resources were found within this radius. Widen the search or verify the coordinates.",
+    distance: "Distance",
+    sourceLink: "View on OpenStreetMap",
+    osmNote: "Results come only from OpenStreetMap; unverified places are never listed. On-site conditions may differ — confirm before relying on a resource.",
+    useLocation: "Use my current location",
+    loadError: "Cooling resource discovery failed. Please try again.",
+  },
+  dashboard: {
+    overline: "SUPERVISOR MONITORING",
+    title: "Cohort heat-risk overview",
+    subtitle: "Aggregated, deterministic view of submitted worker assessments across sites.",
+    refresh: "Refresh",
+    clear: "Clear shift records",
+    clearConfirm: "Clear all stored assessment summaries for this shift?",
+    cleared: "Stored assessment summaries cleared.",
+    total: "Total assessments",
+    critical: "Critical precaution",
+    heightened: "Heightened precaution",
+    advisory: "Advisory",
+    noneRisk: "No precaution flag",
+    urgentHeading: "Urgent cases requiring attention",
+    noUrgent: "No critical-precaution cases in the current cohort.",
+    locationsHeading: "Site risk hotspots",
+    recentHeading: "Recent assessments",
+    completenessHeading: "Profile completeness",
+    completeShare: "Complete profiles",
+    incomplete: "Assessments missing information",
+    worker: "Worker",
+    locationCol: "Location",
+    riskCol: "Risk level",
+    tempCol: "Air temp",
+    timeCol: "Submitted",
+    alertsCol: "Alerts",
+    assessmentsCol: "Assessments",
+    worstCol: "Worst risk",
+    maxTempCol: "Max temp",
+    empty: "No assessments recorded yet. Supervisor statistics appear here as workers submit assessments.",
+    limitationsHeading: "Interpretation limits",
+    loadError: "Supervisor overview could not be loaded.",
+    unusable: "Unusable records excluded",
+  },
 };
 
 const hi: Strings = {
@@ -415,6 +567,82 @@ const hi: Strings = {
     note: "यदि किसी में भ्रम, ऐंठन, गिरना, या चेतना खोने के लक्षण दिखें, तो तुरंत आपातकालीन चिकित्सा सहायता प्राप्त करें। AI मूल्यांकन के लिए देरी न करें।",
   },
   langSwitch: { label: "भाषा" },
+  guidance: {
+    overline: "प्रमाणित सुरक्षा ज्ञान",
+    title: "व्यावसायिक गर्मी-सुरक्षा मार्गदर्शन",
+    subtitle: "OSHA / NIOSH / CDC स्रोतों से समीक्षित चयनित मार्गदर्शन। प्रत्येक विषय प्रमाणित और संदर्भित है।",
+    searchPh: "विषय खोजें, जैसे जलपान, WBGT, अनुकूलन",
+    searchBtn: "खोजें",
+    validated: "प्रमाणित",
+    reviewed: "समीक्षित",
+    sources: "स्रोत",
+    guidanceHeading: "मार्गदर्शन",
+    noResults: "कोई मेल खाता विषय नहीं मिला। दूसरा शब्द आज़माएँ या सभी विषय देखें।",
+    resultsCount: "{count} विषय मिले",
+    kbVersion: "ज्ञान-आधार संस्करण",
+    integrityOk: "सभी विषय प्रमाणित और संदर्भित",
+    browseAll: "सभी विषय देखें",
+    backToList: "विषय सूची पर वापस",
+    category: "श्रेणी",
+    loadError: "सुरक्षा मार्गदर्शन लोड नहीं हो सका। API कनेक्शन जाँचें।",
+  },
+  resources: {
+    overline: "शीतलन संसाधन खोज",
+    title: "कार्यस्थल के पास शीतलन संसाधन खोजें",
+    subtitle: "OpenStreetMap से सार्वजनिक रूप से मानचित्रित पेयजल, आश्रय, इनडोर शरण और छायादार स्थान।",
+    lat: "कार्यस्थल अक्षांश",
+    lng: "कार्यस्थल देशांतर",
+    radius: "खोज दायरा",
+    radiusUnit: "मी",
+    categories: "श्रेणियाँ",
+    catWater: "पेयजल",
+    catShelter: "शीतलन आश्रय",
+    catRefuge: "इनडोर शरण",
+    catShade: "छायादार स्थान",
+    findBtn: "संसाधन खोजें",
+    searching: "मानचित्र डेटा खोजा जा रहा है...",
+    found: "{count} संसाधन मिले",
+    noneFound: "इस दायरे में कोई मानचित्रित शीतलन संसाधन नहीं मिला। दायरा बढ़ाएँ या निर्देशांक जाँचें।",
+    distance: "दूरी",
+    sourceLink: "OpenStreetMap पर देखें",
+    osmNote: "परिणाम केवल OpenStreetMap से हैं; असत्यापित स्थान कभी सूचीबद्ध नहीं किए जाते। भेरोसे पहले स्थलीय परिस्थितियाँ पुष्टि करें।",
+    useLocation: "मेरी वर्तमान स्थिति उपयोग करें",
+    loadError: "शीतलन संसाधन खोज विफल। कृपया पुनः प्रयास करें।",
+  },
+  dashboard: {
+    overline: "पर्यवेक्षक निगरानी",
+    title: "समूह गर्मी-जोखिम अवलोकन",
+    subtitle: "सभी कार्यस्थलों से प्रस्तुत कर्मचारी आकलनों का समग्र, निर्धारित दृश्य।",
+    refresh: "ताज़ा करें",
+    clear: "शिफ्ट रिकॉर्ड हटाएँ",
+    clearConfirm: "इस शिफ्ट के सभी संग्रहीत आकलन सारांश हटाएँ?",
+    cleared: "संग्रहीत आकलन सारांश हटाए गए।",
+    total: "कुल आकलन",
+    critical: "गंभीर सावधानी",
+    heightened: "उच्च सावधानी",
+    advisory: "सलाह",
+    noneRisk: "कोई सावधानी संकेत नहीं",
+    urgentHeading: "तत्काल ध्यान आवश्यक मामले",
+    noUrgent: "वर्तमान समूह में कोई गंभीर-सावधानी मामला नहीं है।",
+    locationsHeading: "साइट जोखिम हॉटस्पॉट",
+    recentHeading: "हाल के आकलन",
+    completenessHeading: "प्रोफ़ाइल पूर्णता",
+    completeShare: "पूर्ण प्रोफ़ाइल",
+    incomplete: "जानकारी रहित आकलन",
+    worker: "कर्मचारी",
+    locationCol: "स्थान",
+    riskCol: "जोखिम स्तर",
+    tempCol: "वायु ताप",
+    timeCol: "प्रस्तुति समय",
+    alertsCol: "चेतावनियाँ",
+    assessmentsCol: "आकलन",
+    worstCol: "सर्वोच्च जोखिम",
+    maxTempCol: "अधिकतम ताप",
+    empty: "अभी कोई आकलन दर्ज नहीं है। कर्मचारी आकलन जमा करते ही पर्यवेक्षक आँकड़े यहाँ दिखेंगे।",
+    limitationsHeading: "व्याख्या सीमाएँ",
+    loadError: "पर्यवेक्षक अवलोकन लोड नहीं हो सका।",
+    unusable: "अनुपयोगी रिकॉर्ड बाहर",
+  },
 };
 
 const gu: Strings = {
@@ -563,6 +791,82 @@ const gu: Strings = {
     note: "જો કોઈને ગૂંચવાઈ જવું, ઝાંપા આવવા, પડી જવું અથવા મૂર્છા આવવા જેવા લક્ષણો દેખાય, તો તાત્કાલિક કટોકટો તબીબી સહાય લો. AI મૂલ્યાંકન માટે વિલંબ ન કરો.",
   },
   langSwitch: { label: "ભાષા" },
+  guidance: {
+    overline: "ચકાસાયેલ સુરક્ષા જ્ઞાન",
+    title: "વ્યવસાયિક ગરમી-સુરક્ષા માર્ગદર્શન",
+    subtitle: "OSHA / NIOSH / CDC સ્રોતોથી સમીક્ષાયેલ પસંદગીયુત માર્ગદર્શન. દરેક વિષય ચકાસાયેલ અને સંદર્ભિત છે.",
+    searchPh: "વિષય શોધો, જેમ કે પાણી પીવું, WBGT, અનુકૂલન",
+    searchBtn: "શોધો",
+    validated: "ચકાસાયેલ",
+    reviewed: "સમીક્ષાયેલ",
+    sources: "સ્રોતો",
+    guidanceHeading: "માર્ગદર્શન",
+    noResults: "કોઈ મેળ ખાતું વિષય મળ્યું નથી. બીજો શબ્દ અજમાવો અથવા બધા વિષય જુઓ.",
+    resultsCount: "{count} વિષય મળ્યા",
+    kbVersion: "જ્ઞાન-આધાર આવૃત્તિ",
+    integrityOk: "બધા વિષય ચકાસાયેલ અને સંદર્ભિત",
+    browseAll: "બધા વિષય જુઓ",
+    backToList: "વિષય યાદી પર પાછા",
+    category: "શ્રેણી",
+    loadError: "સુરક્ષા માર્ગદર્શન લોડ થઈ શક્યું નથી. API કનેક્શન તપાસો.",
+  },
+  resources: {
+    overline: "શીતલિકા સંસાધન શોધ",
+    title: "કાર્યસ્થલ નજીક શીતલિકા સંસાધનો શોધો",
+    subtitle: "OpenStreetMap થી જાહેરપક્ષે નકશાંકિત પીવાનું પાણી, આશ્રયસ્થાનો, इनडोर આશરો અને છાયાદાર સ્થળો.",
+    lat: "કાર્યસ્થલ અક્ષાંશ",
+    lng: "કાર્યસ્થલ રેખાંશ",
+    radius: "શોધ ત્રિજ્યા",
+    radiusUnit: "મી",
+    categories: "શ્રેણીઓ",
+    catWater: "પીવાનું પાણી",
+    catShelter: "શીતલિકા આશ્રયસ્થાનો",
+    catRefuge: "इनडोर આશરો",
+    catShade: "છાયાદાર સ્થળો",
+    findBtn: "સંસાધનો શોધો",
+    searching: "નકશો ડેટા શોધાઈ રહ્યો છે...",
+    found: "{count} સંસાધનો મળ્યાં",
+    noneFound: "આ ત્રિજ્યામાં કોઈ નકશાંકિત શીતલિકા સંસાધન મળ્યું નથી. ત્રિજ્યા વધારો અથવા યામ તપાસો.",
+    distance: "અંતર",
+    sourceLink: "OpenStreetMap પર જુઓ",
+    osmNote: "પરિણામો ફક્ત OpenStreetMap થી છે; અસત્યાપિત સ્થળો ક્યારેય સૂચિબદ્ધ થતા નથી. ભરોસો કરતાં પહેલાં સ્થળ પરની પરિસ્થિતિ ચકાસો.",
+    useLocation: "મારી વર્તમાન સ્થિતિ વાપરો",
+    loadError: "શીતલિકા સંસાધન શોધ નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
+  },
+  dashboard: {
+    overline: "સુપરવઝર નિરીક્ષણ",
+    title: "સમૂહ ગરમી-જોખમ ઝલક",
+    subtitle: "બધા કાર્યસ્થલો પરથી સબમિટ કરેલ કામદાર મૂલ્યાંકનોનું સમગ્ર, નિર્ધારિત દૃશ્ય.",
+    refresh: "તાજું કરો",
+    clear: "શિફ્ટ રેકોર્ડ સાફ કરો",
+    clearConfirm: "આ શિફ્ટના સંગ્રહિત બધા મૂલ્યાંકન સારાંશ સાફ કરવા?",
+    cleared: "સંગ્રહિત મૂલ્યાંકન સારાંશ સાફ થયા.",
+    total: "કુલ મૂલ્યાંકનો",
+    critical: "ગંભીર સાવધાની",
+    heightened: "વધેલી સાવધાની",
+    advisory: "સલાહ",
+    noneRisk: "કોઈ સાવધાની સંકેત નથી",
+    urgentHeading: "તાત્કાલિક ધ્યાન જરૂરી કિસ્સા",
+    noUrgent: "વર્તમાન સમૂહમાં કોઈ ગંભીર-સાવધાની કિસ્સો નથી.",
+    locationsHeading: "સાઇટ જોખમ હોટસ્પોટ",
+    recentHeading: "તાજેતરના મૂલ્યાંકનો",
+    completenessHeading: "પ્રોફાઇલ પૂર્ણતા",
+    completeShare: "પૂર્ણ પ્રોફાઇલ",
+    incomplete: "માહિતી રહિત મૂલ્યાંકનો",
+    worker: "કામદાર",
+    locationCol: "સ્થળ",
+    riskCol: "જોખમ સ્તર",
+    tempCol: "હવાનું તાપમાન",
+    timeCol: "સબમિટ સમય",
+    alertsCol: "એલર્ટ",
+    assessmentsCol: "મૂલ્યાંકનો",
+    worstCol: "સર્વોચ્ચ જોખમ",
+    maxTempCol: "મહત્તમ તાપમાન",
+    empty: "હજી કોઈ મૂલ્યાંકન નจด્જ થયું નથી. કામદારો મૂલ્યાંકન સબમિટ કરે એટલે સુપરવઝર આંકડા અહીં દેખાશે.",
+    limitationsHeading: "અર્ઘઘટન મર્યાદાઓ",
+    loadError: "સુપરવઝર ઝલક લોડ થઈ શકી નથી.",
+    unusable: "અનુપયોગી રેકોર્ડ બાદ",
+  },
 };
 
 export const translations: Record<Lang, Strings> = { en, hi, gu };
