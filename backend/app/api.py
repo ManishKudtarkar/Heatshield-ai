@@ -6,9 +6,21 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, ConfigDict, Field
 
+# Centralized application configuration
+from app.config import settings
+
+# Multi-agent orchestration
 from app.agents.orchestrator import run_heatshield
+
+# Supervisor monitoring and storage
 from app.engine.monitor import build_supervisor_overview
-from app.engine.store import clear_records, list_records, save_assessment
+from app.engine.store import (
+    clear_records,
+    list_records,
+    save_assessment,
+)
+
+# Validated occupational safety knowledge base
 from app.knowledge import (
     KB_VERSION,
     get_topic,
@@ -16,47 +28,74 @@ from app.knowledge import (
     search_knowledge,
     validate_knowledge_base,
 )
+
+# Worker validation
 from app.schemas.worker import WorkerProfile
-from app.tools.cooling_tool import SUPPORTED_CATEGORIES, find_cooling_resources_data
+
+# Cooling resource discovery
+from app.tools.cooling_tool import (
+    SUPPORTED_CATEGORIES,
+    find_cooling_resources_data,
+)
 
 
-# --------------------------------------------------
-# LOGGING
-# --------------------------------------------------
+# ==================================================
+# LOGGING CONFIGURATION
+# ==================================================
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    level=settings.log_level.upper(),
+    format=(
+        "%(asctime)s | "
+        "%(levelname)s | "
+        "%(name)s | "
+        "%(message)s"
+    ),
 )
 
 logger = logging.getLogger("heatshield-api")
 
 
-# --------------------------------------------------
-# API CONFIGURATION
-# --------------------------------------------------
+# ==================================================
+# APPLICATION CONFIGURATION
+# ==================================================
 
 app = FastAPI(
-    title="HeatShield AI API",
+    title=settings.app_name,
     description=(
         "Multi-agent climate intelligence and worker "
         "heat-exposure screening platform."
     ),
-    version="1.0.0",
+    version=settings.app_version,
+    docs_url="/docs" if settings.api_docs_enabled else None,
+    redoc_url="/redoc" if settings.api_docs_enabled else None,
+    openapi_url=(
+        "/openapi.json"
+        if settings.api_docs_enabled
+        else None
+    ),
 )
+
+
+# ==================================================
+# CORS CONFIGURATION
+# ==================================================
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=settings.allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+    ],
 )
 
 
-# --------------------------------------------------
-# REQUEST SCHEMA
-# --------------------------------------------------
+# ==================================================
+# REQUEST SCHEMAS
+# ==================================================
 
 class HeatAssessmentRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -73,57 +112,149 @@ class HeatAssessmentRequest(BaseModel):
     worker_name: str | None = Field(
         default=None,
         max_length=100,
-        description="Optional display name used on the supervisor dashboard.",
+        description=(
+            "Optional display name used on the "
+            "supervisor dashboard."
+        ),
         examples=["Ramesh Patel"],
     )
 
     language: Literal["en", "hi", "gu"] = Field(
         default="en",
         description=(
-            "Worker interface language. Localizes deterministic safety "
-            "alerts and instructs the advisory agents to respond in this "
-            "language. Supported: en, hi, gu."
+            "Worker interface language. Localizes deterministic "
+            "safety alerts and instructs advisory agents to respond "
+            "in the selected language. Supported: en, hi, gu."
         ),
         examples=["hi"],
     )
 
 
-# --------------------------------------------------
+class CoolingResourceRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    latitude: float = Field(
+        ge=-90,
+        le=90,
+    )
+
+    longitude: float = Field(
+        ge=-180,
+        le=180,
+    )
+
+    radius_m: int = Field(
+        default=1500,
+        ge=100,
+        le=5000,
+        description="Search radius in metres.",
+    )
+
+    categories: list[
+        Literal["water", "shelter", "refuge", "shade"]
+    ] | None = Field(
+        default=None,
+        description=(
+            "Cooling-resource categories to include. "
+            f"Supported: {', '.join(SUPPORTED_CATEGORIES)}. "
+            "Default: all."
+        ),
+    )
+
+
+class SupervisorOverviewRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    records: list[dict] = Field(
+        default_factory=list,
+        description=(
+            "Optional externally collected assessment results "
+            "to aggregate together with stored assessments."
+        ),
+    )
+
+
+# ==================================================
 # ROOT ENDPOINT
-# --------------------------------------------------
+# ==================================================
 
 @app.get("/")
 def root():
     return {
         "project": "HeatShield AI",
-        "tagline": "Intelligence Against Extreme Heat. Protection for Every Worker.",
-        "version": "1.0.0",
+        "tagline": (
+            "Intelligence Against Extreme Heat. "
+            "Protection for Every Worker."
+        ),
+        "version": settings.app_version,
         "status": "running",
-        "documentation": "/docs",
+        "documentation": (
+            "/docs"
+            if settings.api_docs_enabled
+            else None
+        ),
         "health": "/health",
+        "readiness": "/ready",
     }
 
 
-# --------------------------------------------------
+# ==================================================
 # HEALTH CHECK
-# --------------------------------------------------
+# ==================================================
 
 @app.get("/health")
 def health_check():
+    """
+    Basic application health check.
+
+    Confirms that the API process is responding.
+    Does not test external dependencies.
+    """
+
     return {
         "success": True,
-        "service": "HeatShield AI API",
+        "service": settings.app_name,
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
-# --------------------------------------------------
-# MAIN ASSESSMENT ENDPOINT
-# --------------------------------------------------
+# ==================================================
+# READINESS CHECK
+# ==================================================
+
+@app.get("/ready")
+def readiness_check():
+    """
+    Application configuration readiness check.
+
+    Does not invoke Amazon Bedrock or external services.
+    """
+
+    return {
+        "success": True,
+        "service": settings.app_name,
+        "status": "ready",
+        "aws_region": settings.aws_region,
+        "bedrock_model_configured": bool(
+            settings.bedrock_model_id
+        ),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+# ==================================================
+# MAIN HEAT ASSESSMENT ENDPOINT
+# ==================================================
 
 @app.post("/api/v1/assess")
-def create_assessment(payload: HeatAssessmentRequest):
+def create_assessment(
+    payload: HeatAssessmentRequest,
+):
+    """
+    Execute the complete HeatShield AI multi-agent
+    worker heat-exposure screening pipeline.
+    """
 
     logger.info(
         "Assessment requested for location: %s",
@@ -133,7 +264,7 @@ def create_assessment(payload: HeatAssessmentRequest):
     try:
         worker_data = payload.worker.model_dump()
 
-        # Execute the existing multi-agent pipeline.
+        # Execute existing multi-agent pipeline.
         result = run_heatshield(
             location=payload.location,
             worker_data=worker_data,
@@ -143,14 +274,19 @@ def create_assessment(payload: HeatAssessmentRequest):
         if not isinstance(result, dict):
             raise HTTPException(
                 status_code=500,
-                detail="The assessment pipeline returned an invalid response.",
+                detail=(
+                    "The assessment pipeline returned "
+                    "an invalid response."
+                ),
             )
 
         if not result.get("success"):
             raise HTTPException(
                 status_code=422,
                 detail={
-                    "message": "Assessment could not be completed.",
+                    "message": (
+                        "Assessment could not be completed."
+                    ),
                     "result": result,
                 },
             )
@@ -160,26 +296,34 @@ def create_assessment(payload: HeatAssessmentRequest):
             payload.location,
         )
 
-        # Store a supervisor-facing summary (best effort; never fails
-        # the worker's assessment request).
+        # Save supervisor-facing summary.
+        # Storage failure must not fail the worker assessment.
         stored_summary: dict | None = None
+
         try:
             stored_summary = save_assessment(
                 result,
                 language=payload.language,
                 worker_name=payload.worker_name,
             )
-        except Exception:  # pragma: no cover - defensive
-            logger.exception("Assessment summary could not be stored.")
+
+        except Exception:
+            logger.exception(
+                "Assessment summary could not be stored."
+            )
 
         response_result = dict(result)
 
         if stored_summary:
-            response_result["assessment_id"] = stored_summary["assessment_id"]
+            response_result["assessment_id"] = (
+                stored_summary["assessment_id"]
+            )
 
         return {
             "success": True,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(
+                timezone.utc
+            ).isoformat(),
             "result": response_result,
         }
 
@@ -187,21 +331,30 @@ def create_assessment(payload: HeatAssessmentRequest):
         raise
 
     except Exception:
-        logger.exception("HeatShield assessment failed.")
+        logger.exception(
+            "HeatShield assessment failed."
+        )
 
         raise HTTPException(
             status_code=500,
-            detail="An internal error occurred while processing the assessment.",
+            detail=(
+                "An internal error occurred while "
+                "processing the assessment."
+            ),
         )
 
 
-# --------------------------------------------------
+# ==================================================
 # KNOWLEDGE BASE ENDPOINTS
-# --------------------------------------------------
+# ==================================================
 
 @app.get("/api/v1/knowledge/topics")
 def knowledge_topic_index():
-    """Compact index of all validated occupational safety topics."""
+    """
+    Return compact index of validated occupational
+    safety knowledge topics.
+    """
+
     return {
         "success": True,
         "kb_version": KB_VERSION,
@@ -210,9 +363,19 @@ def knowledge_topic_index():
 
 
 @app.get("/api/v1/knowledge/topics/{topic_id}")
-def knowledge_topic_detail(topic_id: str, language: str = "en"):
-    """One validated topic, localized (falls back to English per field)."""
-    topic = get_topic(topic_id, language)
+def knowledge_topic_detail(
+    topic_id: str,
+    language: str = "en",
+):
+    """
+    Return one localized knowledge topic.
+    Falls back to English per field when necessary.
+    """
+
+    topic = get_topic(
+        topic_id,
+        language,
+    )
 
     if topic is None:
         raise HTTPException(
@@ -220,64 +383,72 @@ def knowledge_topic_detail(topic_id: str, language: str = "en"):
             detail=f"Unknown knowledge topic: {topic_id}",
         )
 
-    return {"success": True, "kb_version": KB_VERSION, "topic": topic}
+    return {
+        "success": True,
+        "kb_version": KB_VERSION,
+        "topic": topic,
+    }
 
 
 @app.get("/api/v1/knowledge/search")
-def knowledge_search(q: str, language: str = "en"):
-    """Deterministic keyword search over validated topics."""
+def knowledge_search(
+    q: str,
+    language: str = "en",
+):
+    """
+    Deterministic keyword search over validated
+    occupational safety topics.
+    """
+
     query = q.strip()
 
     if len(query) < 2:
         raise HTTPException(
             status_code=422,
-            detail="Search query must contain at least 2 characters.",
+            detail=(
+                "Search query must contain at least "
+                "2 characters."
+            ),
         )
 
-    return search_knowledge(query, language)
+    return search_knowledge(
+        query,
+        language,
+    )
 
 
 @app.get("/api/v1/knowledge/validate")
 def knowledge_validate():
-    """Integrity check: every topic validated, cited and review-dated."""
+    """
+    Validate knowledge base integrity.
+    """
+
     return validate_knowledge_base()
 
 
-# --------------------------------------------------
+# ==================================================
 # COOLING RESOURCE DISCOVERY
-# --------------------------------------------------
-
-class CoolingResourceRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
-    radius_m: int = Field(
-        default=1500,
-        ge=100,
-        le=5000,
-        description="Search radius in metres.",
-    )
-    categories: list[Literal["water", "shelter", "refuge", "shade"]] | None = Field(
-        default=None,
-        description=(
-            "Cooling-resource categories to include. "
-            f"Supported: {', '.join(SUPPORTED_CATEGORIES)}. Default: all."
-        ),
-    )
-
+# ==================================================
 
 @app.post("/api/v1/cooling-resources")
-def cooling_resources(payload: CoolingResourceRequest):
+def cooling_resources(
+    payload: CoolingResourceRequest,
+):
     """
-    Discover publicly mapped cooling resources near a worksite
-    (drinking water, shelters, indoor refuges, shaded spaces).
+    Discover publicly mapped cooling resources near
+    a worksite.
 
-    Results come from OpenStreetMap only; resources are never
-    fabricated and each carries its source link for verification.
+    Supported:
+    - Drinking water
+    - Shelters
+    - Indoor refuges
+    - Shaded spaces
+
+    Results originate from OpenStreetMap.
     """
+
     logger.info(
-        "Cooling resource discovery at (%s, %s) r=%sm",
+        "Cooling resource discovery at (%s, %s), radius=%sm",
         payload.latitude,
         payload.longitude,
         payload.radius_m,
@@ -293,57 +464,92 @@ def cooling_resources(payload: CoolingResourceRequest):
     if not result.get("success"):
         raise HTTPException(
             status_code=502,
-            detail=result.get("error", "Cooling resource discovery failed."),
+            detail=result.get(
+                "error",
+                "Cooling resource discovery failed.",
+            ),
         )
 
     return {
         "success": True,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(
+            timezone.utc
+        ).isoformat(),
         "result": result,
     }
 
 
-# --------------------------------------------------
+# ==================================================
 # SUPERVISOR MONITORING DASHBOARD
-# --------------------------------------------------
-
-class SupervisorOverviewRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    records: list[dict] = Field(
-        default_factory=list,
-        description=(
-            "Optional externally collected assessment results to "
-            "aggregate together with stored assessments."
-        ),
-    )
-
+# ==================================================
 
 @app.get("/api/v1/supervisor/overview")
 def supervisor_overview():
-    """Cohort risk overview built from stored assessment summaries."""
+    """
+    Return cohort-level monitoring overview
+    using stored assessment summaries.
+    """
+
+    records = list_records()
+
     return {
         "success": True,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "overview": build_supervisor_overview(list_records()),
+        "timestamp": datetime.now(
+            timezone.utc
+        ).isoformat(),
+        "overview": build_supervisor_overview(
+            records
+        ),
     }
 
 
 @app.post("/api/v1/supervisor/overview")
-def supervisor_overview_with_records(payload: SupervisorOverviewRequest):
-    """Aggregate submitted assessment results plus stored records."""
-    records = list_records() + payload.records
+def supervisor_overview_with_records(
+    payload: SupervisorOverviewRequest,
+):
+    """
+    Aggregate externally submitted assessment records
+    together with locally stored records.
+    """
+
+    records = (
+        list_records()
+        + payload.records
+    )
 
     return {
         "success": True,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "overview": build_supervisor_overview(records),
+        "timestamp": datetime.now(
+            timezone.utc
+        ).isoformat(),
+        "overview": build_supervisor_overview(
+            records
+        ),
     }
 
 
+# ==================================================
+# SUPERVISOR RECORD MANAGEMENT
+# ==================================================
+
 @app.delete("/api/v1/supervisor/records")
 def supervisor_clear_records():
-    """Clear stored assessment summaries (e.g. after a shift ends)."""
+    """
+    Clear stored assessment summaries.
+
+    IMPORTANT:
+    Protect this endpoint with authentication and
+    authorization before exposing the API publicly.
+    """
+
     removed = clear_records()
 
-    return {"success": True, "removed": removed}
+    logger.warning(
+        "Supervisor assessment records cleared: %s",
+        removed,
+    )
+
+    return {
+        "success": True,
+        "removed": removed,
+    }

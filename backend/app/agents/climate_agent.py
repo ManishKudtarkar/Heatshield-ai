@@ -5,14 +5,16 @@ Analyses environmental weather data for outdoor-worker
 safety awareness. Does not assign occupational risk levels.
 """
 
+from app.config import settings
+
 from strands import Agent
 from strands.models import BedrockModel
 
 from app.tools.weather_tool import get_weather
 
 
-AWS_REGION = "ap-south-1"
-MODEL_ID = "apac.amazon.nova-lite-v1:0"
+AWS_REGION = settings.aws_region
+MODEL_ID = settings.bedrock_model_id
 
 
 model = BedrockModel(

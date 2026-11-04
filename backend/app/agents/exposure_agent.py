@@ -5,14 +5,16 @@ Analyses worker-specific occupational exposure factors
 using validated worker information.
 """
 
+from app.config import settings
+
 from strands import Agent
 from strands.models import BedrockModel
 
 from app.tools.exposure_tool import assess_worker_exposure
 
 
-AWS_REGION = "ap-south-1"
-MODEL_ID = "apac.amazon.nova-lite-v1:0"
+AWS_REGION = settings.aws_region
+MODEL_ID = settings.bedrock_model_id
 
 
 # ==================================================

@@ -1,0 +1,7 @@
+strands-agents
+boto3
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+pydantic-settings

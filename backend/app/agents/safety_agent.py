@@ -5,6 +5,8 @@ Transforms deterministic assessment results into
 practical, evidence-conscious safety recommendations.
 """
 
+from app.config import settings
+
 import json
 
 from strands import Agent
@@ -15,8 +17,8 @@ from strands.models import BedrockModel
 # CONFIGURATION
 # -----------------------------------------------
 
-AWS_REGION = "ap-south-1"
-MODEL_ID = "apac.amazon.nova-lite-v1:0"
+AWS_REGION = settings.aws_region
+MODEL_ID = settings.bedrock_model_id
 
 
 # -----------------------------------------------

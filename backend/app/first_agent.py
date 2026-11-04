@@ -9,6 +9,8 @@ Model:
 Amazon Nova Lite via Amazon Bedrock APAC inference profile.
 """
 
+from app.config import settings
+
 from strands import Agent
 from strands.models import BedrockModel
 
@@ -17,9 +19,9 @@ from strands.models import BedrockModel
 # CONFIGURATION
 # --------------------------------------------------
 
-AWS_REGION = "ap-south-1"
+AWS_REGION = settings.aws_region
 
-BEDROCK_MODEL_ID = "apac.amazon.nova-lite-v1:0"
+BEDROCK_MODEL_ID = settings.bedrock_model_id
 
 
 # --------------------------------------------------
